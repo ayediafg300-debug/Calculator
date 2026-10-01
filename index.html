@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>ماشین حساب امیرعلی</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: Tahoma, sans-serif; }
+
+    body {
+      background: #1a1a2e;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 15px;
+      user-select: none;
+    }
+
+    .calc {
+      background: #16213e;
+      border-radius: 30px;
+      padding: 25px 20px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+    }
+
+    /* ===== عنوان ===== */
+    .title {
+      text-align: center;
+      color: #e94560;
+      margin-bottom: 15px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .title span {
+      color: #f39c12;
+    }
+
+    /* ===== نمایشگر ===== */
+    .display {
+      background: #0f3460;
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 20px;
+      text-align: left;
+      direction: ltr;
+      min-height: 110px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+
+    .history {
+      color: #8899bb;
+      font-size: 14px;
+      height: 20px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .current {
+      color: white;
+      font-size: 42px;
+      font-weight: bold;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      transition: font-size 0.2s;
+    }
+
+    /* ===== دکمه‌ها ===== */
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    button {
+      border: none;
+      height: 65px;
+      border-radius: 18px;
+      font-size: 24px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.15s;
+      color: white;
+      background: #0f3460;
+      box-shadow: 0 4px 0 rgba(0,0,0,0.3);
+      touch-action: manipulation;
+    }
+
+    button:active {
+      transform: translateY(4px);
+      box-shadow: 0 0 0 rgba(0,0,0,0.3);
+    }
+
+    .num { background: #1e3a5f; }
+    .op { background: #533483; }
+    .func { background: #e94560; font-size: 20px; }
+    .equal {
+      background: linear-gradient(135deg, #f39c12, #e67e22);
+      grid-column: span 2;
+      font-size: 28px;
+    }
+    .zero { grid-column: span 2; }
+
+    /* ===== دکمه‌های پایین ===== */
+    .bottom-btns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .bottom-btns button {
+      height: 45px;
+      font-size: 14px;
+      border-radius: 12px;
+    }
+
+    /* ===== پنل‌ها ===== */
+    .panel {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      z-index: 100;
+    }
+
+    .panel.open { display: flex; }
+
+    .box {
+      background: #16213e;
+      border-radius: 20px;
+      padding: 25px;
+      width: 100%;
+      max-width: 380px;
+      max-height: 85vh;
+      overflow-y: auto;
+      color: white;
+    }
+
+    .box h2 {
+      color: #e94560;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    /* ===== تاریخچه ===== */
+    .history-item {
+      background: #0f3460;
+      padding: 12px;
+      border-radius: 12px;
+      margin-bottom: 10px;
+      font-size: 16px;
+      direction: ltr;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .history-item:active { background: #1e3a5f; }
+    .history-item .small { color: #8899bb; font-size: 12px; }
+    .empty { text-align: center; color: #8899bb; padding: 30px; }
+
+    /* ===== سازندگان ===== */
+    .creator-card {
+      background: linear-gradient(135deg, #533483, #e94560);
+      border-radius: 20px;
+      padding: 25px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .avatar {
+      width: 100px;
+      height: 100px;
+      background: #f39c12;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 50px;
+      margin: 0 auto 15px;
+      border: 4px solid white;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+    }
+
+    .creator-name {
+      font-size: 24px;
+      font-weight: bold;
+      color: white;
+      margin-bottom: 8px;
+    }
+
+    .creator-age {
+      font-size: 16px;
+      color: rgba(255,255,255,0.9);
+      margin-bottom: 15px;
+    }
+
+    .badge {
+      display: inline-block;
+      background: rgba(255,255,255,0.2);
+      color: white;
+      padding: 6px 15px;
+      border-radius: 20px;
+      font-size: 13px;
+      margin: 3px;
+    }
+
+    .info-box {
+      background: #0f3460;
+      border-radius: 15px;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+
+    .info-box h3 {
+      color: #f39c12;
+      margin-bottom: 10px;
+      font-size: 16px;
+    }
+
+    .info-box p {
+      color: #ccd;
+      font-size: 14px;
+      line-height: 1.8;
+    }
+
+    .close-btn {
+      width: 100%;
+      margin-top: 10px;
+      background: #e94560;
+      height: 45px;
+      font-size: 16px;
+      border-radius: 12px;
+    }
+
+    /* ===== انیمیشن ===== */
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    .avatar { animation: float 3s ease-in-out infinite; }
+  </style>
+</head>
+<body>
+
+  <div class="calc">
+    <div class="title">🧮 ماشین حساب <span>امیرعلی</span></div>
+
+    <div class="display">
+      <div class="history" id="history"></div>
+      <div class="current" id="current">0</div>
+    </div>
+
+    <div class="buttons">
+      <button class="func" onclick="clearAll()">C</button>
+      <button class="func" onclick="del()">⌫</button>
+      <button class="func" onclick="percent()">%</button>
+      <button class="op" onclick="op('/')">÷</button>
+
+      <button class="num" onclick="num('7')">7</button>
+      <button class="num" onclick="num('8')">8</button>
+      <button class="num" onclick="num('9')">9</button>
+      <button class="op" onclick="op('*')">×</button>
+
+      <button class="num" onclick="num('4')">4</button>
+      <button class="num" onclick="num('5')">5</button>
+      <button class="num" onclick="num('6')">6</button>
+      <button class="op" onclick="op('-')">−</button>
+
+      <button class="num" onclick="num('1')">1</button>
+      <button class="num" onclick="num('2')">2</button>
+      <button class="num" onclick="num('3')">3</button>
+      <button class="op" onclick="op('+')">+</button>
+
+      <button class="num zero" onclick="num('0')">0</button>
+      <button class="num" onclick="num('.')">.</button>
+      <button class="equal" onclick="equal()">=</button>
+    </div>
+
+    <div class="bottom-btns">
+      <button onclick="openHistory()">📜 تاریخچه</button>
+      <button onclick="openCreator()">👤 سازندگان</button>
+    </div>
+  </div>
+
+  <!-- پنل تاریخچه -->
+  <div class="panel" id="historyPanel">
+    <div class="box">
+      <h2>📜 تاریخچه</h2>
+      <div id="historyList"></div>
+      <button class="close-btn" onclick="closePanel('historyPanel')">بستن</button>
+    </div>
+  </div>
+
+  <!-- پنل سازندگان -->
+  <div class="panel" id="creatorPanel">
+    <div class="box">
+      <h2>👤 سازنده</h2>
+
+      <div class="creator-card">
+        <div class="avatar">👨‍💻</div>
+        <div class="creator-name">امیر علی عطایی</div>
+        <div class="creator-age">۱۴ ساله</div>
+        <div>
+          <span class="badge">🎓 برنامه‌نویس</span>
+          <span class="badge">🚀 سازنده اپ</span>
+        </div>
+      </div>
+
+      <div class="info-box">
+        <h3>💡 درباره من</h3>
+        <p>
+          سلام! من امیر علی هستم، ۱۴ ساله.
+          دارم برنامه‌نویسی یاد می‌گیرم و این ماشین حساب
+          رو با HTML، CSS و JavaScript ساختم.
+        </p>
+      </div>
+
+      <div class="info-box">
+        <h3>🛠️ ابزارهایی که استفاده کردم</h3>
+        <p>
+          📱 موبایل اندروید<br>
+          ✏️ اپ Acode برای کدنویسی<br>
+          🌐 Chrome برای تست
+        </p>
+      </div>
+
+      <div class="info-box">
+        <h3>🎯 هدفم</h3>
+        <p>
+          می‌خوام یه برنامه‌نویس حرفه‌ای بشم و
+          اپلیکیشن‌ها و بازی‌های خودم رو بسازم! 💪
+        </p>
+      </div>
+
+      <button class="close-btn" onclick="closePanel('creatorPanel')">بستن</button>
+    </div>
+  </div>
+
+  <script>
+    let current = '0';
+    let previous = null;
+    let operator = null;
+    let shouldResetCurrent = false;
+    let history = [];
+
+    const currentEl = document.getElementById('current');
+    const historyEl = document.getElementById('history');
+    const historyListEl = document.getElementById('historyList');
+
+    function updateDisplay() {
+      currentEl.textContent = current;
+      if (current.length > 10) currentEl.style.fontSize = '28px';
+      else if (current.length > 7) currentEl.style.fontSize = '34px';
+      else currentEl.style.fontSize = '42px';
+
+      if (previous !== null && operator) {
+        const opSymbol = { '+': '+', '-': '−', '*': '×', '/': '÷' }[operator];
+        historyEl.textContent = previous + ' ' + opSymbol;
+      } else {
+        historyEl.textContent = '';
+      }
+    }
+
+    function num(n) {
+      if (shouldResetCurrent) {
+        current = '0';
+        shouldResetCurrent = false;
+      }
+
+      if (n === '.') {
+        if (!current.includes('.')) current += '.';
+      } else {
+        if (current === '0') current = n;
+        else current += n;
+      }
+      if (current.length > 15) current = current.slice(0, 15);
+      updateDisplay();
+    }
+
+    function op(o) {
+      if (operator && !shouldResetCurrent) equal();
+      previous = parseFloat(current);
+      operator = o;
+      shouldResetCurrent = true;
+      updateDisplay();
+    }
+
+    function equal() {
+      if (previous === null || operator === null) return;
+
+      const a = previous;
+      const b = parseFloat(current);
+      let result;
+
+      switch (operator) {
+        case '+': result = a + b; break;
+        case '-': result = a - b; break;
+        case '*': result = a * b; break;
+        case '/':
+          if (b === 0) {
+            current = 'خطا';
+            previous = null;
+            operator = null;
+            updateDisplay();
+            return;
+          }
+          result = a / b;
+          break;
+      }
+
+      result = Math.round(result * 1e10) / 1e10;
+
+      const opSymbol = { '+': '+', '-': '−', '*': '×', '/': '÷' }[operator];
+      const expression = a + ' ' + opSymbol + ' ' + b;
+      history.unshift({ expr: expression, result: result });
+      if (history.length > 20) history.pop();
+
+      current = String(result);
+      previous = null;
+      operator = null;
+      shouldResetCurrent = true;
+      updateDisplay();
+    }
+
+    function clearAll() {
+      current = '0';
+      previous = null;
+      operator = null;
+      shouldResetCurrent = false;
+      updateDisplay();
+    }
+
+    function del() {
+      if (shouldResetCurrent) {
+        current = '0';
+        shouldResetCurrent = false;
+      } else if (current.length > 1) {
+        current = current.slice(0, -1);
+      } else {
+        current = '0';
+      }
+      updateDisplay();
+    }
+
+    function percent() {
+      const val = parseFloat(current) / 100;
+      current = String(val);
+      updateDisplay();
+    }
+
+    function openHistory() {
+      historyListEl.innerHTML = '';
+      if (history.length === 0) {
+        historyListEl.innerHTML = '<div class="empty">هنوز محاسبه‌ای نداری 😊</div>';
+      } else {
+        history.forEach(item => {
+          const div = document.createElement('div');
+          div.className = 'history-item';
+          div.innerHTML = `
+            <div class="small">${item.expr}</div>
+            <div><b>= ${item.result}</b></div>
+          `;
+          div.onclick = () => {
+            current = String(item.result);
+            shouldResetCurrent = true;
+            updateDisplay();
+            closePanel('historyPanel');
+          };
+          historyListEl.appendChild(div);
+        });
+      }
+      document.getElementById('historyPanel').classList.add('open');
+    }
+
+    function openCreator() {
+      document.getElementById('creatorPanel').classList.add('open');
+    }
+
+    function closePanel(id) {
+      document.getElementById(id).classList.remove('open');
+    }
+
+    // کیبورد
+    document.addEventListener('keydown', e => {
+      if (e.key >= '0' && e.key <= '9') num(e.key);
+      else if (e.key === '.') num('.');
+      else if (e.key === '+') op('+');
+      else if (e.key === '-') op('-');
+      else if (e.key === '*') op('*');
+      else if (e.key === '/') { e.preventDefault(); op('/'); }
+      else if (e.key === 'Enter' || e.key === '=') equal();
+      else if (e.key === 'Backspace') del();
+      else if (e.key === 'Escape') clearAll();
+      else if (e.key === '%') percent();
+    });
+
+    updateDisplay();
+  </script>
+</body>
+</html>
